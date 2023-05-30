@@ -2,6 +2,8 @@
 
 namespace KirschbaumDevelopment\NovaInlineRelationship\Observers;
 
+use Laravel\Nova\Exceptions\ResourceMissingException;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
 use Illuminate\Database\Eloquent\Model;
 use KirschbaumDevelopment\NovaInlineRelationship\Integrations\Integrate;
@@ -14,11 +16,12 @@ class NovaInlineRelationshipObserver
     /**
      * Handle updating event for the model
      *
-     * @param Model $model
+     * @param  Model  $model
      *
-     * @return mixed
+     * @return void
+     * @throws ResourceMissingException
      */
-    public function updating(Model $model)
+    public function updating(Model $model): void
     {
         $this->callEvent($model, 'updating');
     }
@@ -26,11 +29,12 @@ class NovaInlineRelationshipObserver
     /**
      * Handle updated event for the model
      *
-     * @param Model $model
+     * @param  Model  $model
      *
-     * @return mixed
+     * @return void
+     * @throws ResourceMissingException
      */
-    public function created(Model $model)
+    public function created(Model $model): void
     {
         $this->callEvent($model, 'created');
     }
@@ -38,11 +42,12 @@ class NovaInlineRelationshipObserver
     /**
      * Handle updating event for the model
      *
-     * @param Model $model
+     * @param  Model  $model
      *
-     * @return mixed
+     * @return void
+     * @throws ResourceMissingException
      */
-    public function creating(Model $model)
+    public function creating(Model $model): void
     {
         $this->callEvent($model, 'creating');
     }
@@ -50,12 +55,13 @@ class NovaInlineRelationshipObserver
     /**
      * Handle events for the model
      *
-     * @param Model $model
-     * @param string $event
+     * @param  Model  $model
+     * @param  string  $event
      *
-     * @return mixed
+     * @return void
+     * @throws ResourceMissingException
      */
-    public function callEvent(Model $model, string $event)
+    public function callEvent(Model $model, string $event): void
     {
         $modelClass = get_class($model);
 
@@ -75,12 +81,12 @@ class NovaInlineRelationshipObserver
     /**
      * Checks if a relationship is singular
      *
-     * @param Model $model
+     * @param  Model  $model
      * @param $relationship
      *
-     * @return RelationshipObservable
+     * @return RelationshipObservable|null
      */
-    public function getRelationshipObserver(Model $model, $relationship): RelationshipObservable
+    public function getRelationshipObserver(Model $model, $relationship): ?RelationshipObservable
     {
         $className = NovaInlineRelationshipHelper::getObserver($model->{$relationship}());
 
@@ -88,13 +94,14 @@ class NovaInlineRelationshipObserver
     }
 
     /**
-     * @param Model $model
+     * @param  Model  $model
      *
-     * @return mixed
+     * @return array
+     * @throws ResourceMissingException
      */
-    protected function getModelRelationships(Model $model)
+    protected function getModelRelationships(Model $model): array
     {
-        return collect(Nova::newResourceFromModel($model)->fields(request()))
+        return collect(Nova::newResourceFromModel($model)->fields(NovaRequest::createFrom(request())))
             ->flatMap(function ($value) {
                 return Integrate::fields($value);
             })
