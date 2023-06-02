@@ -468,7 +468,7 @@ class NovaInlineRelationship extends Field
     protected function getFieldsFromResource($model, $attribute): Collection
     {
         $resource = ! empty($this->resourceClass)
-            ? new $this->resourceClass($model)
+            ? new $this->resourceClass($model->{$attribute}()->getRelated())
             : Nova::newResourceFromModel($model->{$attribute}()->getRelated());
 
         return collect($resource->availableFields(app(NovaRequest::class)))
